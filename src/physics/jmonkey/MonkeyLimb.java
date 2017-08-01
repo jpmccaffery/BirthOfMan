@@ -27,15 +27,22 @@ import com.jme3.scene.Node;
 
 public class MonkeyLimb implements AbstractLimb, MonkeyObject
 {
+	private static final float FRICTION = 0.05f;
+	private static final float CAP_SIZE = 0.1f;
+	private static final int AXIS_SAMPLES = 32;
+	private static final int RADIAL_SAMPLES = 32;
+	private static final String LIMB_NAME = "limb";
+
 	public MonkeyLimb (AbstractLimb limb_)
 	{
 		m_node = new Node ("Limb");
 		m_numCaps = limb_.numCaps ();
 
 		int axis = PhysicsSpace.AXIS_Z;
+		float radius = limb_.width () / 2;
 
 		CapsuleCollisionShape shape =
-			new CapsuleCollisionShape (RADIUS, limb_.length (), axis);
+			new CapsuleCollisionShape (radius, limb_.length (), axis);
 		RigidBodyControl rigidBodyControl =
 			new RigidBodyControl (shape, limb_.mass ());
 
@@ -56,28 +63,32 @@ public class MonkeyLimb implements AbstractLimb, MonkeyObject
 
 		Geometry cylinderGeo;
 
-		cylinderGeo = makeCylinder (bodyLen, new Vector3f (0f, 0f, offset), ColorRGBA.Red);
+		cylinderGeo = makeCylinder (bodyLen, radius, new Vector3f (0f, 0f, offset),
+		                            ColorRGBA.Red);
 		m_node.attachChild(cylinderGeo);
 
 		if (m_numCaps < 1)
 			return;
 
 		offset = limb_.length () / 2f - capLen / 2f;
-		cylinderGeo = makeCylinder (capLen, new Vector3f (0f, 0f, offset), ColorRGBA.Blue);
+		cylinderGeo = makeCylinder (capLen, radius, new Vector3f (0f, 0f, offset),
+		                            ColorRGBA.Blue);
 		m_node.attachChild(cylinderGeo);
 
 		if (m_numCaps < 2)
 			return;
 
 		offset = -limb_.length () / 2f + capLen / 2f;
-		cylinderGeo = makeCylinder (capLen, new Vector3f (0f, 0f, offset), ColorRGBA.Blue);
+		cylinderGeo = makeCylinder (capLen, radius, new Vector3f (0f, 0f, offset),
+		                            ColorRGBA.Blue);
 		m_node.attachChild(cylinderGeo);
 	}
 
-	private Geometry makeCylinder (float length_, Vector3f center_, ColorRGBA color_)
+	private Geometry makeCylinder (float length_, float radius_, Vector3f center_,
+	                               ColorRGBA color_)
 	{
 		Cylinder limbBox = new Cylinder (AXIS_SAMPLES, RADIAL_SAMPLES,
-		                                 RADIUS, length_, true);
+		                                 radius_, length_, true);
 		Geometry limbGeometry = new Geometry (LIMB_NAME, limbBox);
 
 		DesktopAssetManager manager = new DesktopAssetManager (true);
@@ -113,6 +124,18 @@ public class MonkeyLimb implements AbstractLimb, MonkeyObject
 	public void setLength (float length_)
 	{
 		System.err.println ("MonkeyLimb::setLength: Invalid update. Reparent first.");
+		System.exit (0);
+	}
+
+	public float width ()
+	{
+		return
+			2 * ((Cylinder) ((Geometry) m_node.getChild (LIMB_NAME)).getMesh ()).getRadius ();
+	}
+
+	public void setWidth (float width_)
+	{
+		System.err.println ("MonkeyLimb::setWidth: Invalid update. Reparent first.");
 		System.exit (0);
 	}
 
@@ -185,12 +208,4 @@ public class MonkeyLimb implements AbstractLimb, MonkeyObject
 	private Node m_node;
 	private PhysicsSpace m_space;
 	private int m_numCaps;
-
-	private static final float RADIUS = 0.2f;
-	private static final float FRICTION = 0.05f;
-
-	private static final float CAP_SIZE = 0.1f;
-	private static final int AXIS_SAMPLES = 32;
-	private static final int RADIAL_SAMPLES = 32;
-	private static final String LIMB_NAME = "limb";
 }

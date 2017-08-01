@@ -1,0 +1,11 @@
+#!/bin/sh
+
+CLASSPATH=.
+
+CLASSPATH=$CLASSPATH:/home/jack/jmonkeyplatform/jmonkeyplatform/libs/jme3-core-3.1.0-stable.jar
+CLASSPATH=$CLASSPATH:/home/jack/jmonkeyplatform/jmonkeyplatform/libs/jme3-jbullet-3.1.0-stable.jar
+CLASSPATH=$CLASSPATH:/home/jack/jmonkeyplatform/jmonkeyplatform/libs/jme3-desktop-3.1.0-stable.jar
+CLASSPATH=$CLASSPATH:/home/jack/jmonkeyplatform/jmonkeyplatform/libs/*
+#CLASSPATH=$CLASSPATH:/home/jack/jmonkeyplatform/jmonkeyplatform/modules/com-jme3-gde-core.jar
+
+export CLASSPATH

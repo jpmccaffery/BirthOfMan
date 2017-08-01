@@ -29,6 +29,12 @@ public class Limb implements AbstractLimb, CompositeObject
 		m_limb = limb_;
 	}
 
+	public Limb (Vector3f position_, Vector3f alignment_, float length_, float width_,
+	             float mass_, int numCaps_)
+	{
+		m_limb = new AetherLimb (position_, alignment_, length_, width_, mass_, numCaps_);
+	}
+
 	public Limb (Vector3f position_, Vector3f alignment_, float length_, float mass_,
 	             int numCaps_)
 	{
@@ -73,6 +79,16 @@ public class Limb implements AbstractLimb, CompositeObject
 	public void setLength (float length_)
 	{
 		m_limb.setLength (length_);
+	}
+
+	public float width ()
+	{
+		return m_limb.width ();
+	}
+
+	public void setWidth (float width_)
+	{
+		m_limb.setWidth (width_);
 	}
 
 	public float mass ()

@@ -12,6 +12,9 @@ public interface AbstractLimb extends PhysicsObject
 	public float length ();
 	public void setLength (float length_);
 
+	public float width ();
+	public void setWidth (float width_);
+
 	public float mass ();
 	public void setMass (float mass_);
 

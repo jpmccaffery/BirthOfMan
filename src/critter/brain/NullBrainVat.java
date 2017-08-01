@@ -1,9 +1,7 @@
 package critter.brain;
 
-import network.Network;
 
-
-public abstract class NullBrainVat
+public class NullBrainVat implements BrainVat
 {
 	public NullBrainVat ()
 	{

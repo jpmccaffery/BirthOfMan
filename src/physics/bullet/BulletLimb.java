@@ -38,6 +38,15 @@ public class BulletLimb implements AbstractLimb, BulletObject
 	{
 	}
 
+	public float width ()
+	{
+		return 0;
+	}
+
+	public void setWidth (float width_)
+	{
+	}
+
 	public float mass ()
 	{
 		return 0;

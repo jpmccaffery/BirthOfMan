@@ -1,13 +1,18 @@
 package evolver;
 
+import critter.body.Horse;
 import critter.body.SimpleBody;
 import critter.body.Body;
 import critter.Critter;
 import critter.brain.NeuralRandomBrainVat;
+import critter.brain.NullBrainVat;
 import critter.brain.BrainVat;
 import critter.brain.NeuralPushPullBrain;
 import critter.BirthingPod;
 import critter.SimpleWalkerBirthingPod;
+import critter.HorseBirthingPod;
+import critter.TripodBirthingPod;
+import critter.SnakeBirthingPod;
 
 import physics.aether.AetherLimb;
 import physics.jmonkey.MonkeyLimb;
@@ -114,7 +119,9 @@ public class DemoMain extends SimpleApplication implements ActionListener
 
 		BrainVat vat = new NeuralRandomBrainVat ("networks/test.xml", 1,
 		                                         NeuralPushPullBrain.class);
-		BirthingPod pod = new SimpleWalkerBirthingPod (vat);
+//		BrainVat vat = new NullBrainVat ();
+//		BirthingPod pod = new SimpleWalkerBirthingPod (vat);
+		BirthingPod pod = new SnakeBirthingPod (vat);
 
 		m_critter = pod.birth ();
 		m_critter.body ().registerWithJMonkey (m_bulletAppState.getPhysicsSpace (), rootNode);
