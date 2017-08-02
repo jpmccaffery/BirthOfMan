@@ -1,5 +1,24 @@
 package evolver;
 
+import network.Network;
+import network.NetworkBuilder;
+
+import critter.body.Horse;
+import critter.body.Tripod;
+import critter.body.Snake;
+import critter.body.SimpleBody;
+import critter.body.Body;
+
+import critter.brain.NeuralPushPullBrain;
+import critter.brain.NeuralRandomBrainVat;
+import critter.brain.NeuralXMLBrainVat;
+import critter.brain.NullBrainVat;
+import critter.brain.BrainVat;
+
+import critter.Critter;
+import critter.BirthingPod;
+import critter.WalkerBirthingPod;
+
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.TextureKey;
 
@@ -42,9 +61,6 @@ import com.jme3.system.JmeContext;
 import com.jme3.texture.Texture;
 import com.jme3.util.TangentBinormalGenerator;
 
-import network.Network;
-import network.NetworkBuilder;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -72,9 +88,6 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 
 		app.setPauseOnLostFocus(false);
 		app.start();
-
-		//This alternate run line runs the code without graphics
-		//app.start(JmeContext.Type.Headless);
 	}
 
 	@Override
@@ -97,14 +110,14 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 		stateManager.attach (m_bulletAppState);
 		PhysicsTestHelper.createPhysicsTestWorld (
 			rootNode, assetManager, m_bulletAppState.getPhysicsSpace ());
-		createRagDoll ();
 
 		//Create initial population of neural network controllers
-		setupNetworks (m_evolveMode);
-		loadNetwork(m_runningNetworkId);
+		m_runningNetworkId = m_evolveMode ? 1 : NET_ID_TO_EVAL;
 
-		singleLineNetworkInput = new double[7];
-		singleLineNetworkInput[6] = 1.0f;
+		if (m_evolveMode)
+			initNetworks ();
+
+		initCritter ();
 
 		if (m_debugMode)
 			m_bulletAppState.setDebugEnabled (true);
@@ -126,8 +139,9 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 		{
 			//calculate fitness
 			int tempFitness = 0;
-			Vector3f endLoc = m_shoulders.getLocalTranslation ();
-			float distanceTraveled = startLoc.distance (endLoc);
+
+			Vector3f endLocation = m_critter.body ().position ();
+			float distanceTraveled = m_startLocation.distance (endLocation);
 
 			distanceTraveled = Math.round(distanceTraveled * 100);
 			tempFitness = (int) distanceTraveled;
@@ -139,36 +153,10 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 		}
 		else
 		{
-			int i = 0;
-			while (i < SIM_SPEED)
-			{
-				m_nn.activate(singleLineNetworkInput);
-				i++;
-			}
+			for (int i = 0; i < (int) SIM_SPEED; i++)
+				m_critter.think (tpf_);
 
-			singleLineNetworkInput[0] = desiredYawVelocity1;
-			singleLineNetworkInput[1] = desiredRollVelocity1;
-			singleLineNetworkInput[2] = desiredPitchVelocity1;
-			singleLineNetworkInput[3] = desiredYawVelocity2;
-			singleLineNetworkInput[4] = desiredRollVelocity2;
-			singleLineNetworkInput[5] = desiredPitchVelocity2;
-			singleLineNetworkInput[6] = 1.0f;
-
-			//Set desired velocities as difference of two output neurons, using a push/pull representation
-			desiredYawVelocity1 = (float) m_nn.getNeuronByID(7).getMembranePotential() - (float) m_nn.getNeuronByID(8).getMembranePotential();
-			desiredRollVelocity1 = (float) m_nn.getNeuronByID(9).getMembranePotential() - (float) m_nn.getNeuronByID(10).getMembranePotential();
-			desiredPitchVelocity1 = (float) m_nn.getNeuronByID(11).getMembranePotential() - (float) m_nn.getNeuronByID(12).getMembranePotential();
-			desiredYawVelocity2 = (float) m_nn.getNeuronByID(13).getMembranePotential() - (float) m_nn.getNeuronByID(14).getMembranePotential();
-			desiredRollVelocity2 = (float) m_nn.getNeuronByID(15).getMembranePotential() - (float) m_nn.getNeuronByID(16).getMembranePotential();
-			desiredPitchVelocity2 = (float) m_nn.getNeuronByID(17).getMembranePotential() - (float) m_nn.getNeuronByID(18).getMembranePotential();
-
-			yawMotor1.setTargetVelocity(desiredYawVelocity1);
-			rollMotor1.setTargetVelocity(desiredRollVelocity1);
-			pitchMotor1.setTargetVelocity(desiredPitchVelocity1);
-
-			yawMotor2.setTargetVelocity(desiredYawVelocity2);
-			rollMotor2.setTargetVelocity(desiredRollVelocity2);
-			pitchMotor2.setTargetVelocity(desiredPitchVelocity2);
+			m_critter.act (tpf_);
 
 			m_evalCounter++;
 		}
@@ -181,8 +169,7 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 		{
 			System.out.println ("unsorted map: "+fitnessVals);
 
-			FitnessComparator fc =
-				new FitnessComparator (fitnessVals);
+			FitnessComparator fc = new FitnessComparator (fitnessVals);
 
 			sortedFitnessVals = new TreeMap<Integer,Integer>(fc);
 			sortedFitnessVals.putAll(fitnessVals);
@@ -194,25 +181,13 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 
 			System.out.println(sortedKeys);
 
-			int numSurviving =
-				(int) (POP_SIZE * survivalPercentage);
+			int numSurviving = (int) (POP_SIZE * survivalPercentage);
 			int numDying = POP_SIZE - numSurviving;
 			Object[] sortedArray = sortedKeys.toArray();
 
-			mostFit = Arrays.copyOfRange (
-				sortedArray, 0, numSurviving, Integer[].class);
-			leastFit = Arrays.copyOfRange (
-				sortedArray, numSurviving, sortedArray.length,
-				Integer[].class);
-
-/*
-			for (int i = 0; i < mostFit.length; i++) {
-				System.out.println("mostFit: " + mostFit[i]);
-			}
-			for (int i = 0; i < leastFit.length; i++) {
-				System.out.println("leastFit: " + leastFit[i]);
-			}
-*/
+			mostFit = Arrays.copyOfRange (sortedArray, 0, numSurviving, Integer[].class);
+			leastFit = Arrays.copyOfRange (sortedArray, numSurviving, sortedArray.length,
+			                               Integer[].class);
 
 			Repopulator rp = new Repopulator ();
 
@@ -225,34 +200,31 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 			if (m_genCounter > NUM_GENS)
 			{
 				System.out.println ("Finished!");
+				System.exit (0);
 			}
 			else
 			{
 				System.out.println("generation: " + m_genCounter);
-				System.out.println("evaluating network: " +
-						   m_runningNetworkId);
 			}
 		}
 
 		// Otherwise load the next network
-		loadNetwork (m_runningNetworkId);
+		System.out.println ("evaluating network: " + m_runningNetworkId);
 
-		System.out.println("evaluating network: " +
-				   m_runningNetworkId);
+		m_critter.body ().unregisterFromSpace ();
+		initCritter ();
+	}
 
-		m_bulletAppState.getPhysicsSpace().removeAll(
-			m_agent.getChild(0));
-		m_bulletAppState.getPhysicsSpace().removeAll(
-			m_agent.getChild(1));
-		m_bulletAppState.getPhysicsSpace().removeAll(
-			m_agent.getChild(2));
-		m_agent.removeFromParent();
+	private void initCritter ()
+	{
+		Body body = new SimpleBody ();
+		BrainVat vat = new NeuralXMLBrainVat (NET_DIR + m_runningNetworkId + ".xml",
+		                                      NeuralPushPullBrain.class);
+		BirthingPod pod = new WalkerBirthingPod (vat, body);
 
-		System.gc();
-
-		//create the next m_agent
-		m_agent = new Node();
-		createRagDoll();
+		m_critter = pod.birth ();
+		m_critter.body ().registerWithJMonkey (m_bulletAppState.getPhysicsSpace (), rootNode);
+		m_startLocation = m_critter.body ().position ();
 	}
 
 	/// \brief Set up the lighting
@@ -314,14 +286,8 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 	}
 
 	/// \brief Initialize a population of networks
-	private void setupNetworks (boolean evolveMode_)
+	private void initNetworks ()
 	{
-		if (! evolveMode_)
-		{
-			m_runningNetworkId = NET_ID_TO_EVAL;
-			return;
-		}
-
 		for (int i = 0; i < POP_SIZE; i++)
 		{
 			try
@@ -346,135 +312,6 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 				System.exit (0);
 			}
 		}
-	}
-
-	/// \brief Load a network from its ID
-	private void loadNetwork (int networkId_)
-	{
-		File file = new File(NET_DIR + networkId_ + ".xml");
-
-		NetworkBuilder networkBuilder = new NetworkBuilder();
-		m_nn = networkBuilder.buildNetworkFromFile(file);
-		m_nn.setWinnerTakeAll(true);
-	}
-
-	/// \brief Create a ragdoll entity.
-	/// \todo Move this into its own class
-	private void createRagDoll ()
-	{
-		m_shoulders = createLimb (
-			0.2f, 1.0f, new Vector3f (0.00f, 1.5f, 0), true, false);
-		Node uArmL = createLimb (
-			0.2f, 0.5f, new Vector3f (-0.75f, 0.8f, 0), false, false);
-		Node uArmR = createLimb (
-			0.2f, 0.5f, new Vector3f (0.75f, 0.8f, 0), false, false);
-
-		lShoulderJoint = join (uArmL, m_shoulders,
-				       new Vector3f(-0.75f, 1.4f, 0));
-		rShoulderJoint = join (uArmR, m_shoulders,
-				       new Vector3f(0.75f, 1.4f, 0));
-
-		pitchMotor1 = lShoulderJoint.getRotationalLimitMotor(0);
-		yawMotor1 = lShoulderJoint.getRotationalLimitMotor(1);
-		rollMotor1 = lShoulderJoint.getRotationalLimitMotor(2);
-
-		pitchMotor1.setEnableMotor(true);
-		yawMotor1.setEnableMotor(true);
-		rollMotor1.setEnableMotor(true);
-
-		pitchMotor1.setMaxMotorForce(1);
-		yawMotor1.setMaxMotorForce(1);
-		rollMotor1.setMaxMotorForce(1);
-
-		pitchMotor2 = rShoulderJoint.getRotationalLimitMotor(0);
-		yawMotor2 = rShoulderJoint.getRotationalLimitMotor(1);
-		rollMotor2 = rShoulderJoint.getRotationalLimitMotor(2);
-
-		pitchMotor2.setEnableMotor(true);
-		yawMotor2.setEnableMotor(true);
-		rollMotor2.setEnableMotor(true);
-
-		pitchMotor2.setMaxMotorForce(1);
-		yawMotor2.setMaxMotorForce(1);
-		rollMotor2.setMaxMotorForce(1);
-
-		join(uArmR, m_shoulders, new Vector3f(0.75f, 1.4f, 0));
-
-		m_agent.attachChild(m_shoulders);
-		m_agent.attachChild(uArmL);
-		m_agent.attachChild(uArmR);
-
-		rootNode.attachChild(m_agent);
-
-		m_bulletAppState.getPhysicsSpace().addAll(m_agent);
-
-		startLoc = m_agent.getLocalTranslation();
-	}
-
-	/// \brief Create a limb
-	/// \todo Move this into a separate class
-	private Node createLimb (
-		float width_, float height_, Vector3f location_,
-		boolean rotate_, boolean kinematic_)
-	{
-		int axis = rotate_ ? PhysicsSpace.AXIS_X : PhysicsSpace.AXIS_Y;
-		CapsuleCollisionShape shape =
-			new CapsuleCollisionShape (width_, height_, axis);
-
-		Node node = new Node ("Limb");
-		RigidBodyControl rigidBodyControl =
-			new RigidBodyControl (shape, 1);
-
-		rigidBodyControl.setFriction(0.05f);
-/*
-		if (kinematic_) {
-			rigidBodyControl.setKinematic(true);
-		}
-
-		rigidBodyControl.setAngularSleepingThreshold(0);
-		rigidBodyControl.setGravity(Vector3f.ZERO);
-*/
-
-		node.setLocalTranslation (location_);
-		node.addControl (rigidBodyControl);
-		node.setShadowMode (ShadowMode.Cast);
-
-		Cylinder limbBox = new Cylinder (32, 32, width_, height_, true);
-		Geometry limbGeometry = new Geometry ("Limb", limbBox);
-
-		Material mat2 = new Material(
-			assetManager, "Common/MatDefs/Light/Lighting.j3md");
-
-		mat2.setBoolean ("UseMaterialColors",true);
-		mat2.setColor ("Ambient", ColorRGBA.Red);
-		mat2.setColor ("Diffuse", ColorRGBA.Red);
-		mat2.setColor ("Specular", ColorRGBA.White);
-		mat2.setFloat ("Shininess", 12);
-
-		limbGeometry.setMaterial (mat2);
-
-		Quaternion newRotation = new Quaternion ();
-		Vector3f rotAxis =
-			rotate_ ? new Vector3f (0, 1, 0) : new Vector3f (1, 0, 0);
-
-		newRotation.fromAngleAxis (FastMath.PI / 2, rotAxis);
-		limbGeometry.setLocalRotation(newRotation);
-		node.attachChild(limbGeometry);
-
-		return node;
-	}
-
-	/// \brief Build a joint connecting two nodes
-	private SixDofJoint join (Node A_, Node B_, Vector3f connectionPoint_)
-	{
-		Vector3f pivotA =
-			A_.worldToLocal (connectionPoint_, new Vector3f());
-		Vector3f pivotB =
-			B_.worldToLocal (connectionPoint_, new Vector3f());
-
-		return new SixDofJoint(A_.getControl (RigidBodyControl.class),
-				       B_.getControl (RigidBodyControl.class),
-				       pivotA, pivotB, true);
 	}
 
 	@Override
@@ -508,9 +345,6 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 			//System.out.println("ROLL -1");
 		}
 		if (name_.equals("Reset") && isPressed_) {
-			desiredPitchVelocity1 = 0;
-			desiredYawVelocity1 = 0;
-			desiredRollVelocity1 = 0;
 			System.out.println("RESET");
 			//leftShoulderJoint.getBodyB().clearForces();
 			//leftShoulderJoint.getBodyB().setPhysicsLocation(Vector3f.UNIT_Y);
@@ -541,31 +375,6 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 
 	private BulletAppState m_bulletAppState = new BulletAppState();
 
-	private Node m_agent = new Node();
-	private Node m_shoulders;
-
-	private SixDofJoint lShoulderJoint;
-	private SixDofJoint rShoulderJoint;
-
-	protected RotationalLimitMotor pitchMotor1;
-	protected RotationalLimitMotor yawMotor1;
-	protected RotationalLimitMotor rollMotor1;
-
-	protected float desiredPitchVelocity1 = 0;
-	protected float desiredYawVelocity1 = 0;
-	protected float desiredRollVelocity1 = 0;
-
-	protected RotationalLimitMotor pitchMotor2;
-	protected RotationalLimitMotor yawMotor2;
-	protected RotationalLimitMotor rollMotor2;
-
-	protected float desiredPitchVelocity2 = 0;
-	protected float desiredYawVelocity2 = 0;
-	protected float desiredRollVelocity2 = 0;
-
-	private Network m_nn;
-	private double[] singleLineNetworkInput;
-
 	// Either in evolve mode or evaluate mode. If in evaluate mode, a
 	// network id to be evaluated needs to be specified
 	private int m_genCounter = 1;
@@ -579,7 +388,9 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 	private Integer[] mostFit;
 	private Integer[] leastFit;
 	private double survivalPercentage = 0.30;
-	private Vector3f startLoc;
+
+	private Critter m_critter;
+	private Vector3f m_startLocation;
 
 	// Constants
 	private static final String NET_DIR = "networks/network";
@@ -587,7 +398,7 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 	private static final int NUM_GENS = 100;
 	private static final int NUM_EVAL_STEPS = 1000;
 	private static final int NET_ID_TO_EVAL = 1;
-	private static final float SIM_SPEED = 1;
+	private static final float SIM_SPEED = 100;
 
 	// Options
 	private boolean m_evolveMode = true;
