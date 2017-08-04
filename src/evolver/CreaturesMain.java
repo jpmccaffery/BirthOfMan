@@ -82,12 +82,12 @@ import java.util.logging.Logger;
 public class CreaturesMain extends SimpleApplication implements ActionListener
 {
 	/// \brief Main function. Just starts the app.
-	public static void main(String[] args)
+	public static void main (String[] args_)
 	{
-		CreaturesMain app = new CreaturesMain();
+		CreaturesMain app = new CreaturesMain ();
 
-		app.setPauseOnLostFocus(false);
-		app.start();
+		app.setPauseOnLostFocus (false);
+		app.start ();
 	}
 
 	@Override
