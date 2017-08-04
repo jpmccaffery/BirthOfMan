@@ -4,3 +4,8 @@
 *.so*
 /build/
 /dist/
+*.dll
+build.xml
+networks/*
+nbproject/private
+nbproject/private/*
