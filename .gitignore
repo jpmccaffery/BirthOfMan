@@ -1,0 +1,6 @@
+.*
+*.class
+*~
+*.so*
+/build/
+/dist/
