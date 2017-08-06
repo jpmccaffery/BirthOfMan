@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<settings>
+<pop_size>10</pop_size>
+<num_gens>100</num_gens>
+<num_eval_steps>1000</num_eval_steps>
+<sim_speed>100</sim_speed>
+<survival_percentage>0.30</survival_percentage>
+</settings>

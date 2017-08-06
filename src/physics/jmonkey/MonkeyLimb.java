@@ -4,7 +4,6 @@ import physics.AbstractLimb;
 
 import utilities.CoordUtils;
 
-import com.jme3.app.LegacyApplication;
 
 import com.jme3.asset.DesktopAssetManager;
 

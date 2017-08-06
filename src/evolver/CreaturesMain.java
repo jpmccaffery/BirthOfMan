@@ -5,7 +5,6 @@ import network.NetworkBuilder;
 
 import critter.body.Horse;
 import critter.body.Tripod;
-import critter.body.Snake;
 import critter.body.SimpleBody;
 import critter.body.Body;
 
@@ -77,6 +76,11 @@ import java.util.TreeMap;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 
 public class CreaturesMain extends SimpleApplication implements ActionListener
@@ -97,6 +101,13 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 		// Init Logger
 		Logger.getLogger ("").setLevel (Level.SEVERE);
 
+                //Load settings from configuration file
+            try {
+                loadConfigFile();
+            } catch (ParserConfigurationException | SAXException ex) {
+                Logger.getLogger(CreaturesMain.class.getName()).log(Level.SEVERE, null, ex);
+            }
+                              
 		// Init basic environment
 		setupLight ();
 		setupKeys (m_dvorakMode);
@@ -105,7 +116,7 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 		// Init physics
 		m_bulletAppState = new BulletAppState ();
 
-		m_bulletAppState.setSpeed (SIM_SPEED);
+		m_bulletAppState.setSpeed (simSpeed);
 
 		stateManager.attach (m_bulletAppState);
 		PhysicsTestHelper.createPhysicsTestWorld (
@@ -127,15 +138,46 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 	}
 
 
+        
+        private void loadConfigFile() throws ParserConfigurationException, SAXException {
+
+            
+            configFile = new File("./config.xml"); 
+            
+            try {
+                DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+                Document doc = docBuilder.parse( configFile );
+
+                String popSizeString = doc.getElementsByTagName("pop_size").item(0).getTextContent();
+                popSize = Integer.parseInt(popSizeString);
+                
+                String numGensString = doc.getElementsByTagName("num_gens").item(0).getTextContent();
+                numGens = Integer.parseInt(numGensString);                
+                
+                String numEvalStepsString = doc.getElementsByTagName("num_eval_steps").item(0).getTextContent();
+                numEvalSteps = Integer.parseInt(numEvalStepsString); 
+                
+                String simSpeedString = doc.getElementsByTagName("sim_speed").item(0).getTextContent();
+                simSpeed = Float.parseFloat(simSpeedString); 
+                
+                String survivalPercentageString = doc.getElementsByTagName("survival_percentage").item(0).getTextContent();
+                survivalPercentage = Double.parseDouble(survivalPercentageString); 
+                
+            } catch (IOException exception) {        	    			
+            }
+
+        }
+        
 	@Override
 	public void simpleUpdate(float tpf_)
 	{
-		if (m_genCounter > NUM_GENS)
+		if (m_genCounter > numGens)
 		{
 			return;
 		}
 
-		if (m_evalCounter > NUM_EVAL_STEPS)
+		if (m_evalCounter > numEvalSteps)
 		{
 			//calculate fitness
 			int tempFitness = 0;
@@ -153,7 +195,7 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 		}
 		else
 		{
-			for (int i = 0; i < (int) SIM_SPEED; i++)
+			for (int i = 0; i < (int) simSpeed; i++)
 				m_critter.think (tpf_);
 
 			m_critter.act (tpf_);
@@ -165,7 +207,7 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 	private void nextNetwork ()
 	{
 		// Finished the whole population so breed and reset
-		if (m_runningNetworkId > POP_SIZE)
+		if (m_runningNetworkId > popSize)
 		{
 			System.out.println ("unsorted map: "+fitnessVals);
 
@@ -181,8 +223,8 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 
 			System.out.println(sortedKeys);
 
-			int numSurviving = (int) (POP_SIZE * survivalPercentage);
-			int numDying = POP_SIZE - numSurviving;
+			int numSurviving = (int) (popSize * survivalPercentage);
+			int numDying = popSize - numSurviving;
 			Object[] sortedArray = sortedKeys.toArray();
 
 			mostFit = Arrays.copyOfRange (sortedArray, 0, numSurviving, Integer[].class);
@@ -197,7 +239,7 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 			m_runningNetworkId = 1;
 			m_genCounter++;
 
-			if (m_genCounter > NUM_GENS)
+			if (m_genCounter > numGens)
 			{
 				System.out.println ("Finished!");
 				System.exit (0);
@@ -288,7 +330,7 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 	/// \brief Initialize a population of networks
 	private void initNetworks ()
 	{
-		for (int i = 0; i < POP_SIZE; i++)
+		for (int i = 0; i < popSize; i++)
 		{
 			try
 			{
@@ -374,6 +416,8 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 	}
 
 	private BulletAppState m_bulletAppState = new BulletAppState();
+        
+        private static File configFile;
 
 	// Either in evolve mode or evaluate mode. If in evaluate mode, a
 	// network id to be evaluated needs to be specified
@@ -394,11 +438,11 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 
 	// Constants
 	private static final String NET_DIR = "networks/network";
-	private static final int POP_SIZE = 20;
-	private static final int NUM_GENS = 100;
-	private static final int NUM_EVAL_STEPS = 1000;
+	private static int popSize = 10;
+        private static int numGens = 100;
+	private static int numEvalSteps = 1000;
 	private static final int NET_ID_TO_EVAL = 1;
-	private static final float SIM_SPEED = 100;
+	private static float simSpeed = 100;
 
 	// Options
 	private boolean m_evolveMode = true;
