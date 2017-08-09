@@ -33,5 +33,15 @@ public class JointActuator implements Actuator
 		return 3;
 	}
 
+	public void highlight ()
+	{
+		m_joint.highlight ();
+	}
+
+	public void unHighlight ()
+	{
+		m_joint.unHighlight ();
+	}
+
 	private Joint m_joint;
 }

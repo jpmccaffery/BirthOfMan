@@ -57,6 +57,21 @@ public class Joint implements AbstractJoint, CompositeObject
 		return m_joint.rightJoin ();
 	}
 
+	public void highlight ()
+	{
+		m_joint.highlight ();
+	}
+
+	public void unHighlight ()
+	{
+		m_joint.unHighlight ();
+	}
+
+	public boolean isHighlighted ()
+	{
+		return m_joint.isHighlighted ();
+	}
+
 	public void unregisterFromSpace ()
 	{
 		m_joint.unregisterFromSpace ();

@@ -3,6 +3,8 @@ package evolver;
 import network.Network;
 import network.NetworkBuilder;
 
+import critter.actuator.Actuator;
+
 import critter.body.Horse;
 import critter.body.Tripod;
 import critter.body.SimpleBody;
@@ -69,6 +71,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -101,13 +104,17 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 		// Init Logger
 		Logger.getLogger ("").setLevel (Level.SEVERE);
 
-                //Load settings from configuration file
-            try {
-                loadConfigFile();
-            } catch (ParserConfigurationException | SAXException ex) {
-                Logger.getLogger(CreaturesMain.class.getName()).log(Level.SEVERE, null, ex);
-            }
-                              
+		//Load settings from configuration file
+		try
+		{
+			loadConfigFile ();
+		}
+		catch (ParserConfigurationException | SAXException ex)
+		{
+			Logger.getLogger (CreaturesMain.class.getName ()).log (Level.SEVERE, null, ex);
+			System.exit (0);
+		}
+
 		// Init basic environment
 		setupLight ();
 		setupKeys (m_dvorakMode);
@@ -129,6 +136,7 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 			initNetworks ();
 
 		initCritter ();
+		m_currentActuator = null;
 
 		if (m_debugMode)
 			m_bulletAppState.setDebugEnabled (true);
@@ -138,37 +146,44 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 	}
 
 
-        
-        private void loadConfigFile() throws ParserConfigurationException, SAXException {
 
-            
-            configFile = new File("./config.xml"); 
-            
-            try {
-                DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
-                DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
-                Document doc = docBuilder.parse( configFile );
+	private void loadConfigFile () throws ParserConfigurationException, SAXException
+	{
+		configFile = new File("./config.xml");
 
-                String popSizeString = doc.getElementsByTagName("pop_size").item(0).getTextContent();
-                popSize = Integer.parseInt(popSizeString);
-                
-                String numGensString = doc.getElementsByTagName("num_gens").item(0).getTextContent();
-                numGens = Integer.parseInt(numGensString);                
-                
-                String numEvalStepsString = doc.getElementsByTagName("num_eval_steps").item(0).getTextContent();
-                numEvalSteps = Integer.parseInt(numEvalStepsString); 
-                
-                String simSpeedString = doc.getElementsByTagName("sim_speed").item(0).getTextContent();
-                simSpeed = Float.parseFloat(simSpeedString); 
-                
-                String survivalPercentageString = doc.getElementsByTagName("survival_percentage").item(0).getTextContent();
-                survivalPercentage = Double.parseDouble(survivalPercentageString); 
-                
-            } catch (IOException exception) {        	    			
-            }
+		try
+		{
+			DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance ();
+			DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder ();
+			Document doc = docBuilder.parse (configFile);
 
-        }
-        
+			String popSizeString =
+				doc.getElementsByTagName ("pop_size").item (0).getTextContent ();
+			popSize = Integer.parseInt (popSizeString);
+
+			String numGensString =
+				doc.getElementsByTagName ("num_gens").item (0).getTextContent ();
+			numGens = Integer.parseInt (numGensString);
+
+			String numEvalStepsString =
+				doc.getElementsByTagName ("num_eval_steps").item (0).getTextContent ();
+			numEvalSteps = Integer.parseInt (numEvalStepsString);
+
+			String simSpeedString =
+				doc.getElementsByTagName ("sim_speed").item (0).getTextContent ();
+			simSpeed = Float.parseFloat (simSpeedString);
+
+			String survivalPercentageString =
+				doc.getElementsByTagName ("survival_percentage").item (0).getTextContent ();
+			survivalPercentage = Double.parseDouble (survivalPercentageString);
+		}
+		catch (IOException exception)
+		{
+			System.err.println ("Failed to load config");
+			System.exit (0);
+		}
+	}
+
 	@Override
 	public void simpleUpdate(float tpf_)
 	{
@@ -260,8 +275,9 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 	private void initCritter ()
 	{
 		Body body = new SimpleBody ();
-		BrainVat vat = new NeuralXMLBrainVat (NET_DIR + m_runningNetworkId + ".xml",
-		                                      NeuralPushPullBrain.class);
+//		BrainVat vat = new NeuralXMLBrainVat (NET_DIR + m_runningNetworkId + ".xml",
+//		                                      NeuralPushPullBrain.class);
+		BrainVat vat = new NullBrainVat ();
 		BirthingPod pod = new WalkerBirthingPod (vat, body);
 
 		m_critter = pod.birth ();
@@ -300,31 +316,29 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 	/// \brief Set up the input key mappings for a qwerty keyboard
 	private void setupQwertyKeys ()
 	{
-		inputManager.addMapping("PitchPlus", new KeyTrigger(KeyInput.KEY_I));
-		inputManager.addMapping("PitchMinus", new KeyTrigger(KeyInput.KEY_K));
-		inputManager.addMapping("YawPlus", new KeyTrigger(KeyInput.KEY_O));
-		inputManager.addMapping("YawMinus", new KeyTrigger(KeyInput.KEY_U));
-		inputManager.addMapping("RollPlus", new KeyTrigger(KeyInput.KEY_L));
-		inputManager.addMapping("RollMinus", new KeyTrigger(KeyInput.KEY_J));
-		inputManager.addMapping("Reset", new KeyTrigger(KeyInput.KEY_R));
-		inputManager.addMapping("toggleEnableMotors", new KeyTrigger(KeyInput.KEY_SPACE));
+		inputManager.addMapping("Highlight", new KeyTrigger(KeyInput.KEY_J));
+		inputManager.addMapping("1", new KeyTrigger(KeyInput.KEY_1));
+		inputManager.addMapping("2", new KeyTrigger(KeyInput.KEY_2));
+		inputManager.addMapping("3", new KeyTrigger(KeyInput.KEY_3));
+		inputManager.addMapping("4", new KeyTrigger(KeyInput.KEY_4));
+		inputManager.addMapping("5", new KeyTrigger(KeyInput.KEY_5));
+		inputManager.addMapping("6", new KeyTrigger(KeyInput.KEY_6));
 
-		inputManager.addListener(this, "RollMinus", "RollPlus", "PitchMinus", "PitchPlus", "YawMinus", "YawPlus", "Reset", "toggleEnableMotors");
+		inputManager.addListener(this, "Highlight", "1", "2", "3", "4", "5", "6");
 	}
 
 	/// \brief Set up the input key mappings for a dvorak keyboard
 	private void setupDvorakKeys ()
 	{
-		inputManager.addMapping("PitchPlus", new KeyTrigger(KeyInput.KEY_C));
-		inputManager.addMapping("PitchMinus", new KeyTrigger(KeyInput.KEY_T));
-		inputManager.addMapping("YawPlus", new KeyTrigger(KeyInput.KEY_R));
-		inputManager.addMapping("YawMinus", new KeyTrigger(KeyInput.KEY_G));
-		inputManager.addMapping("RollPlus", new KeyTrigger(KeyInput.KEY_N));
-		inputManager.addMapping("RollMinus", new KeyTrigger(KeyInput.KEY_H));
-		inputManager.addMapping("Reset", new KeyTrigger(KeyInput.KEY_P));
-		inputManager.addMapping("toggleEnableMotors", new KeyTrigger(KeyInput.KEY_SPACE));
+		inputManager.addMapping("Highlight", new KeyTrigger(KeyInput.KEY_J));
+		inputManager.addMapping("1", new KeyTrigger(KeyInput.KEY_1));
+		inputManager.addMapping("2", new KeyTrigger(KeyInput.KEY_2));
+		inputManager.addMapping("3", new KeyTrigger(KeyInput.KEY_3));
+		inputManager.addMapping("4", new KeyTrigger(KeyInput.KEY_4));
+		inputManager.addMapping("5", new KeyTrigger(KeyInput.KEY_5));
+		inputManager.addMapping("6", new KeyTrigger(KeyInput.KEY_6));
 
-		inputManager.addListener(this, "RollMinus", "RollPlus", "PitchMinus", "PitchPlus", "YawMinus", "YawPlus", "Reset", "toggleEnableMotors");
+		inputManager.addListener(this, "Highlight", "1", "2", "3", "4", "5", "6");
 	}
 
 	/// \brief Initialize a population of networks
@@ -359,38 +373,44 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 	@Override
 	public void onAction (String name_, boolean isPressed_, float tpf_)
 	{
-		if (name_.equals("PitchPlus") && isPressed_) {
-			//desiredPitchVelocity1 += 1;
-		   //System.out.println("PITCH +1: " + desiredPitchVelocity1);
-		   //leftShoulderJoint.enableMotor(true, 1, .1f);
+		if (name_.equals("Highlight") && isPressed_)
+		{
+			if (m_currentActuator == null)
+			{
+				m_currentActuator = m_critter.controls ().first ();
+			}
+			else
+			{
+				m_currentActuator.unHighlight ();
+				m_currentActuator = m_critter.controls ().next (m_currentActuator);
+			}
+
+			if (m_currentActuator == null)
+				return;
+
+			m_currentActuator.highlight ();
 		}
-		if (name_.equals("PitchMinus") && isPressed_) {
-			//desiredPitchVelocity1 -= 1;
-			//System.out.println("PITCH -1: " + desiredPitchVelocity1);
-			//leftShoulderJoint.enableMotor(true, -1, .1f);
-		}
-		if (name_.equals("YawPlus") && isPressed_) {
-			//desiredYawVelocity1 += 1;
-			//System.out.println("YAW +1");
-			//leftShoulderJoint.enableMotor(false, 0.0f, 0.1f);
-		}
-		if (name_.equals("YawMinus") && isPressed_) {
-			//desiredYawVelocity1 -= 1;
-			//System.out.println("YAW -1");
-		}
-		if (name_.equals("RollPlus") && isPressed_) {
-			//desiredRollVelocity1 += 1;
-			//System.out.println("ROLL +1");
-		}
-		if (name_.equals("RollMinus") && isPressed_) {
-			//desiredRollVelocity1 -= 1;
-			//System.out.println("ROLL -1");
-		}
-		if (name_.equals("Reset") && isPressed_) {
-			System.out.println("RESET");
-			//leftShoulderJoint.getBodyB().clearForces();
-			//leftShoulderJoint.getBodyB().setPhysicsLocation(Vector3f.UNIT_Y);
-			//leftShoulderJoint.getBodyB().setPhysicsRotation(new Quaternion());
+		else if (name_.equals ("1") || name_.equals ("2") || name_.equals ("3") ||
+		         name_.equals ("4") || name_.equals ("5") || name_.equals ("6"))
+		{
+			if (m_currentActuator == null)
+				return;
+
+			float val = isPressed_ ? 1f : 0f;
+
+			List<Float> activation = new ArrayList<Float> ();
+
+			for (int i = 1; i < m_currentActuator.size () + 1; i++)
+			{
+				if (i == Integer.parseInt (name_))
+					activation.add (val);
+				else if (i + m_currentActuator.size () == Integer.parseInt (name_))
+					activation.add (-val);
+				else
+					activation.add (0f);
+			}
+
+			m_currentActuator.act (activation, tpf_);
 		}
 	}
 
@@ -416,8 +436,8 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 	}
 
 	private BulletAppState m_bulletAppState = new BulletAppState();
-        
-        private static File configFile;
+
+	private static File configFile;
 
 	// Either in evolve mode or evaluate mode. If in evaluate mode, a
 	// network id to be evaluated needs to be specified
@@ -434,15 +454,16 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 	private double survivalPercentage = 0.30;
 
 	private Critter m_critter;
+	private Actuator m_currentActuator;
 	private Vector3f m_startLocation;
 
 	// Constants
 	private static final String NET_DIR = "networks/network";
 	private static int popSize = 10;
-        private static int numGens = 100;
+	private static int numGens = 100;
 	private static int numEvalSteps = 1000;
 	private static final int NET_ID_TO_EVAL = 1;
-	private static float simSpeed = 100;
+	private static float simSpeed = 1;
 
 	// Options
 	private boolean m_evolveMode = true;

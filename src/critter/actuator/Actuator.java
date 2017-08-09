@@ -7,4 +7,7 @@ public interface Actuator
 {
 	public void act (List<Float> input_, float tpf_);
 	public int size ();
+
+	public void highlight ();
+	public void unHighlight ();
 }

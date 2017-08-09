@@ -17,6 +17,8 @@ public class AetherJoint implements AbstractJoint, AetherObject
 
 		m_leftJoin = new Limb ();
 		m_rightJoin = new Limb ();
+
+		m_isHighlighted = false;
 	}
 
 	public AetherJoint (Limb leftJoin_, Limb rightJoin_, Vector3f pivot_)
@@ -26,6 +28,8 @@ public class AetherJoint implements AbstractJoint, AetherObject
 
 		m_leftJoin = leftJoin_;
 		m_rightJoin = rightJoin_;
+
+		m_isHighlighted = false;
 	}
 
 	public AetherJoint (Limb leftJoin_, Limb rightJoin_)
@@ -41,6 +45,8 @@ public class AetherJoint implements AbstractJoint, AetherObject
 
 		m_leftJoin = leftJoin_;
 		m_rightJoin = rightJoin_;
+
+		m_isHighlighted = false;
 	}
 
 	public AetherJoint (AbstractJoint joint_)
@@ -50,6 +56,8 @@ public class AetherJoint implements AbstractJoint, AetherObject
 
 		m_leftJoin = joint_.leftJoin ();
 		m_rightJoin = joint_.rightJoin ();
+
+		m_isHighlighted = false;
 	}
 
 	public Vector3f angularSpeed ()
@@ -72,6 +80,21 @@ public class AetherJoint implements AbstractJoint, AetherObject
 		return m_rightJoin;
 	}
 
+	public void highlight ()
+	{
+		m_isHighlighted = true;
+	}
+
+	public void unHighlight ()
+	{
+		m_isHighlighted = false;
+	}
+
+	public boolean isHighlighted ()
+	{
+		return m_isHighlighted;
+	}
+
 	public Vector3f position ()
 	{
 		return m_pivot;
@@ -84,6 +107,8 @@ public class AetherJoint implements AbstractJoint, AetherObject
 	///////////////////////////////////////////////////////////////////////////
 	private Vector3f m_speed;
 	private Vector3f m_pivot;
+
+	private boolean m_isHighlighted;
 
 	private Limb m_leftJoin;
 	private Limb m_rightJoin;

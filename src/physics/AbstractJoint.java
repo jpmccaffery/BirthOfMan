@@ -10,4 +10,8 @@ public interface AbstractJoint extends PhysicsObject
 
 	public Limb leftJoin ();
 	public Limb rightJoin ();
+
+	public void highlight ();
+	public void unHighlight ();
+	public boolean isHighlighted ();
 }

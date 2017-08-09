@@ -4,7 +4,6 @@ import physics.AbstractLimb;
 
 import utilities.CoordUtils;
 
-
 import com.jme3.asset.DesktopAssetManager;
 
 import com.jme3.bullet.PhysicsSpace;
@@ -47,6 +46,7 @@ public class MonkeyLimb implements AbstractLimb, MonkeyObject
 
 		rigidBodyControl.setFriction(FRICTION);
 		rigidBodyControl.setLinearVelocity(limb_.speed ());
+		rigidBodyControl.setSleepingThresholds (0f, 0f);
 
 		m_node.setLocalRotation (limb_.orientation ());
 		m_node.setLocalTranslation (limb_.position ());
@@ -64,7 +64,7 @@ public class MonkeyLimb implements AbstractLimb, MonkeyObject
 
 		cylinderGeo = makeCylinder (bodyLen, radius, new Vector3f (0f, 0f, offset),
 		                            ColorRGBA.Red);
-		m_node.attachChild(cylinderGeo);
+		m_node.attachChild (cylinderGeo);
 
 		if (m_numCaps < 1)
 			return;
@@ -72,7 +72,7 @@ public class MonkeyLimb implements AbstractLimb, MonkeyObject
 		offset = limb_.length () / 2f - capLen / 2f;
 		cylinderGeo = makeCylinder (capLen, radius, new Vector3f (0f, 0f, offset),
 		                            ColorRGBA.Blue);
-		m_node.attachChild(cylinderGeo);
+		m_node.attachChild (cylinderGeo);
 
 		if (m_numCaps < 2)
 			return;
@@ -80,7 +80,7 @@ public class MonkeyLimb implements AbstractLimb, MonkeyObject
 		offset = -limb_.length () / 2f + capLen / 2f;
 		cylinderGeo = makeCylinder (capLen, radius, new Vector3f (0f, 0f, offset),
 		                            ColorRGBA.Blue);
-		m_node.attachChild(cylinderGeo);
+		m_node.attachChild (cylinderGeo);
 	}
 
 	private Geometry makeCylinder (float length_, float radius_, Vector3f center_,
