@@ -129,6 +129,8 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 		PhysicsTestHelper.createPhysicsTestWorld (
 			rootNode, assetManager, m_bulletAppState.getPhysicsSpace ());
 
+		m_bulletAppState.getPhysicsSpace ().setGravity (GRAVITY);
+
 		//Create initial population of neural network controllers
 		m_runningNetworkId = m_evolveMode ? 1 : NET_ID_TO_EVAL;
 
@@ -459,6 +461,7 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 
 	// Constants
 	private static final String NET_DIR = "networks/network";
+	private static final Vector3f GRAVITY = new Vector3f (0f, 0f, 0f);
 	private static int popSize = 10;
 	private static int numGens = 100;
 	private static int numEvalSteps = 1000;

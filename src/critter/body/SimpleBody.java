@@ -22,7 +22,7 @@ public class SimpleBody extends Body
 		Joint elbow;
 
 		m_torso = new Limb (new Vector3f (0f, 0f, 0f), new Vector3f (0f, 0f, 1f),
-                            length, mass, 2);
+                            length, 1000f * mass, 2);
 		m_limbs.add (m_torso);
 
 		float offset = length / 2f + length / 2f;
