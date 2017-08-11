@@ -67,6 +67,11 @@ public class Joint implements AbstractJoint, CompositeObject
 		m_joint.unHighlight ();
 	}
 
+	public void updateHighlight ()
+	{
+		m_joint.updateHighlight ();
+	}
+
 	public boolean isHighlighted ()
 	{
 		return m_joint.isHighlighted ();

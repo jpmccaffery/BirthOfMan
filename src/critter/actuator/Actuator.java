@@ -10,4 +10,6 @@ public interface Actuator
 
 	public void highlight ();
 	public void unHighlight ();
+
+	public void updateHighlight ();
 }

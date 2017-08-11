@@ -27,7 +27,7 @@ public class SimpleBody extends Body
 
 		float offset = length / 2f + length / 2f;
 
-		arm = new Limb (new Vector3f (0f, -offset, -offset), new Vector3f (0f, -1f, 0f),
+		arm = new Limb (new Vector3f (0f, -offset, -offset * 2f), new Vector3f (0f, -1f, -1f),
                         length, mass, 1);
 		m_limbs.add (arm);
 

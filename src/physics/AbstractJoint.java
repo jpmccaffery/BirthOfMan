@@ -14,4 +14,8 @@ public interface AbstractJoint extends PhysicsObject
 	public void highlight ();
 	public void unHighlight ();
 	public boolean isHighlighted ();
+
+	default public void updateHighlight ()
+	{
+	}
 }

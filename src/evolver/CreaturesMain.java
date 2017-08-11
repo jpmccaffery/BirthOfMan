@@ -194,6 +194,9 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 			return;
 		}
 
+		if (m_currentActuator != null)
+			m_currentActuator.updateHighlight ();
+
 		if (m_evalCounter > numEvalSteps)
 		{
 			//calculate fitness
