@@ -33,19 +33,6 @@ public class BulletJoint implements AbstractJoint, BulletObject
 		return new Limb ();
 	}
 
-	public void highlight ()
-	{
-	}
-
-	public void unHighlight ()
-	{
-	}
-
-	public boolean isHighlighted ()
-	{
-		return false;
-	}
-
 	public void unregisterFromSpace ()
 	{
 	}

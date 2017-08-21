@@ -43,9 +43,9 @@ public class JointActuator implements Actuator
 		m_joint.unHighlight ();
 	}
 
-	public void updateHighlight ()
+	public boolean isHighlighted ()
 	{
-		m_joint.updateHighlight ();
+		return m_joint.isHighlighted ();
 	}
 
 	private Joint m_joint;

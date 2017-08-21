@@ -20,6 +20,9 @@ import critter.Critter;
 import critter.BirthingPod;
 import critter.WalkerBirthingPod;
 
+import physics.RenderUpdater;
+import physics.RenderUpdatable;
+
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.TextureKey;
 
@@ -71,6 +74,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -86,7 +90,7 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 
-public class CreaturesMain extends SimpleApplication implements ActionListener
+public class CreaturesMain extends SimpleApplication implements ActionListener, RenderUpdater
 {
 	/// \brief Main function. Just starts the app.
 	public static void main (String[] args_)
@@ -147,8 +151,6 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 		System.out.println("evaluating network: " + m_runningNetworkId);
 	}
 
-
-
 	private void loadConfigFile () throws ParserConfigurationException, SAXException
 	{
 		configFile = new File("./config.xml");
@@ -194,8 +196,8 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 			return;
 		}
 
-		if (m_currentActuator != null)
-			m_currentActuator.updateHighlight ();
+		for (RenderUpdatable u : m_toUpdate)
+			u.renderUpdate (tpf_);
 
 		if (m_evalCounter > numEvalSteps)
 		{
@@ -286,7 +288,7 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 		BirthingPod pod = new WalkerBirthingPod (vat, body);
 
 		m_critter = pod.birth ();
-		m_critter.body ().registerWithJMonkey (m_bulletAppState.getPhysicsSpace (), rootNode);
+		m_critter.body ().registerWithJMonkey (m_bulletAppState.getPhysicsSpace (), this);
 		m_startLocation = m_critter.body ().position ();
 	}
 
@@ -440,8 +442,22 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 		}
 	}
 
-	private BulletAppState m_bulletAppState = new BulletAppState();
+	public void registerUpdatable (RenderUpdatable u_)
+	{
+		m_toUpdate.add (u_);
+	}
 
+	public void unregisterUpdatable (RenderUpdatable u_)
+	{
+		m_toUpdate.remove (u_);
+	}
+
+	public Node rootNode ()
+	{
+		return rootNode;
+	}
+
+	private BulletAppState m_bulletAppState = new BulletAppState();
 	private static File configFile;
 
 	// Either in evolve mode or evaluate mode. If in evaluate mode, a
@@ -461,6 +477,8 @@ public class CreaturesMain extends SimpleApplication implements ActionListener
 	private Critter m_critter;
 	private Actuator m_currentActuator;
 	private Vector3f m_startLocation;
+
+	private Set<RenderUpdatable> m_toUpdate = new HashSet<RenderUpdatable> ();
 
 	// Constants
 	private static final String NET_DIR = "networks/network";

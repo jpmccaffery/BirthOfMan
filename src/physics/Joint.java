@@ -67,11 +67,6 @@ public class Joint implements AbstractJoint, CompositeObject
 		m_joint.unHighlight ();
 	}
 
-	public void updateHighlight ()
-	{
-		m_joint.updateHighlight ();
-	}
-
 	public boolean isHighlighted ()
 	{
 		return m_joint.isHighlighted ();
@@ -96,11 +91,11 @@ public class Joint implements AbstractJoint, CompositeObject
 		m_joint = bJoint;
 	}
 
-	public void registerWithJMonkey (PhysicsSpace space_, Node rootNode_)
+	public void registerWithJMonkey (PhysicsSpace space_, RenderUpdater updater_)
 	{
 		m_joint.unregisterFromSpace ();
 		MonkeyJoint mJoint = new MonkeyJoint (m_joint);
-		mJoint.registerWithJMonkey (space_, rootNode_);
+		mJoint.registerWithJMonkey (space_, updater_);
 
 		m_joint = mJoint;
 	}

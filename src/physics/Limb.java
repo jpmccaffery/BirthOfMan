@@ -150,11 +150,11 @@ public class Limb implements AbstractLimb, CompositeObject
 		m_limb = bLimb;
 	}
 
-	public void registerWithJMonkey (PhysicsSpace space_, Node rootNode_)
+	public void registerWithJMonkey (PhysicsSpace space_, RenderUpdater updater_)
 	{
 		m_limb.unregisterFromSpace ();
 		MonkeyLimb mLimb = new MonkeyLimb (m_limb);
-		mLimb.registerWithJMonkey (space_, rootNode_);
+		mLimb.registerWithJMonkey (space_, updater_);
 
 		m_limb = mLimb;
 	}

@@ -1,6 +1,7 @@
 package physics.jmonkey;
 
 import physics.AbstractLimb;
+import physics.RenderUpdater;
 
 import utilities.CoordUtils;
 
@@ -186,17 +187,21 @@ public class MonkeyLimb implements AbstractLimb, MonkeyObject
 	public void unregisterFromSpace ()
 	{
 		m_space.removeAll (m_node);
-
 		m_node.removeFromParent ();
 	}
 
 	/// May need to attach to a root node
-	public void registerWithJMonkey (PhysicsSpace space_, Node rootNode_)
+	public void registerWithJMonkey (PhysicsSpace space_, RenderUpdater updater_)
 	{
 		m_space = space_;
 		m_space.addAll (m_node);
 
-		rootNode_.attachChild (m_node);
+		updater_.rootNode ().attachChild (m_node);
+		// Note, does not register with the updater
+	}
+
+	public void renderUpdate (float tpf_)
+	{
 	}
 
 	public Node node ()

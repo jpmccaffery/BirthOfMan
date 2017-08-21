@@ -3,6 +3,7 @@ package critter.body;
 import physics.CompositeObject;
 import physics.Joint;
 import physics.Limb;
+import physics.RenderUpdater;
 import physics.bullet.DummyBulletSpace;
 
 import com.jme3.bullet.PhysicsSpace;
@@ -36,13 +37,13 @@ public abstract class Body implements CompositeObject
 			l.unregisterFromSpace ();
 	}
 
-	public final void registerWithJMonkey (PhysicsSpace space_, Node rootNode_)
+	public final void registerWithJMonkey (PhysicsSpace space_, RenderUpdater updater_)
 	{
 		for (Limb l : limbs ())
-			l.registerWithJMonkey (space_, rootNode_);
+			l.registerWithJMonkey (space_, updater_);
 
 		for (Joint j : joints ())
-			j.registerWithJMonkey (space_, rootNode_);
+			j.registerWithJMonkey (space_, updater_);
 	}
 
 	public final void registerWithBullet (DummyBulletSpace space_)

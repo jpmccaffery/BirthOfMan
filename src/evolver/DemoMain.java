@@ -19,6 +19,8 @@ import physics.aether.AetherLimb;
 import physics.jmonkey.MonkeyLimb;
 import physics.Limb;
 import physics.Joint;
+import physics.RenderUpdatable;
+import physics.RenderUpdater;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.TextureKey;
@@ -74,6 +76,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -83,7 +86,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
-public class DemoMain extends SimpleApplication implements ActionListener
+public class DemoMain extends SimpleApplication implements ActionListener, RenderUpdater
 {
 	/// \brief Main function. Just starts the app.
 	public static void main (String[] args)
@@ -130,13 +133,16 @@ public class DemoMain extends SimpleApplication implements ActionListener
 		BirthingPod pod = new WalkerBirthingPod (vat, body);
 
 		m_critter = pod.birth ();
-		m_critter.body ().registerWithJMonkey (m_bulletAppState.getPhysicsSpace (), rootNode);
+		m_critter.body ().registerWithJMonkey (m_bulletAppState.getPhysicsSpace (), this);
 	}
 
 
 	@Override
 	public void simpleUpdate(float tpf_)
 	{
+		for (RenderUpdatable u : m_toUpdate)
+			u.renderUpdate (tpf_);
+
 		m_critter.think (tpf_);
 		m_critter.act (tpf_);
 	}
@@ -237,6 +243,23 @@ public class DemoMain extends SimpleApplication implements ActionListener
 			//leftShoulderJoint.getBodyB().setPhysicsRotation(new Quaternion());
 		}
 	}
+
+	public void registerUpdatable (RenderUpdatable u_)
+	{
+		m_toUpdate.add (u_);
+	}
+
+	public void unregisterUpdatable (RenderUpdatable u_)
+	{
+		m_toUpdate.remove (u_);
+	}
+
+	public Node rootNode ()
+	{
+		return rootNode;
+	}
+
+	private Set<RenderUpdatable> m_toUpdate = new HashSet<RenderUpdatable> ();
 
 	private BulletAppState m_bulletAppState = new BulletAppState();
 	private Critter m_critter;
